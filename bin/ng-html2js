@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
-var fs       = require('fs');
+var fs = require('fs');
 var optimist = require('optimist');
 var path = require('path');
 
 var html2js = require('../src/html2js');
-
 
 
 //
@@ -13,22 +12,26 @@ var html2js = require('../src/html2js');
 //
 
 var argv = optimist.usage('Usage: $0 <input file> <output file>')
-    // -m, --module option
-    .alias('m', 'module')
-    .string('m')
-    .describe('m', 'If module name is provided, template will be packaged under this module.')
-    // --module-var option
-    .string('module-var')
-    .describe('module-var', '--module-var is to be used with --module. If module-var is provided, it will pass module-var to immediately-invoked function expression (IIFE). Its default value is "module".')
-    // -b, --basedir option
-    .alias('b', 'basedir')
-    .string('b')
-    .describe('b', 'If basedir is provided, basedir will be removed from the templates\' path.')
-    // -h, --help option
-    .alias('h', 'help')
-    .boolean('h')
-    .describe('h', 'Shows usage message; what you are looking at.')
-    .argv;
+  // -m, --module option
+  .alias('m', 'module')
+  .string('m')
+  .describe('m', 'If module name is provided, template will be packaged under this module.')
+  // --module-var option
+  .string('module-var')
+  .describe('module-var', '--module-var is to be used with --module. If module-var is provided, it will pass module-var to immediately-invoked function expression (IIFE). Its default value is "module".')
+  // -b, --basedir option
+  .alias('b', 'basedir')
+  .string('b')
+  .describe('b', 'If basedir is provided, basedir will be removed from the templates\' path.')
+  // -p, --prefix option
+  .alias('p', 'prefix')
+  .string('p')
+  .describe('p', 'If prefix is provided, the path in the generated-js will be prefixed')
+  // -h, --help option
+  .alias('h', 'help')
+  .boolean('h')
+  .describe('h', 'Shows usage message; what you are looking at.')
+  .argv;
 
 if (argv._.length === 0 || argv.help) {
   console.log(optimist.help());
@@ -40,16 +43,19 @@ var outputFile = argv._[1];
 var moduleName = argv.m;
 var moduleVar = argv['module-var'];
 var baseDir = argv.b;
+var prefix = argv.p;
 
 //
 // Main script
 //
 
 var content = fs.readFileSync(inputFile, 'utf8');
-var inputAlias = inputFile;
-if(baseDir){
-  baseDir = path.resolve(baseDir);
-  inputAlias = inputAlias.replace(baseDir, '');
+var inputAlias = path.normalize(inputFile);
+if (baseDir) {
+  inputAlias = inputAlias.replace(path.normalize(baseDir), '');
+}
+if (prefix) {
+  inputAlias = path.normalize(path.join(prefix, inputAlias));
 }
 inputAlias = inputAlias.replace(/\\/g, '/');
 var output = html2js(inputAlias, content, moduleName, moduleVar);
@@ -59,3 +65,4 @@ if (outputFile) {
 } else {
   console.log(output);
 }
+
